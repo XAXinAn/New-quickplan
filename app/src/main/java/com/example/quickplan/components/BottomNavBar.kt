@@ -10,7 +10,9 @@ import com.example.quickplan.navigation.Screen
 @Composable
 fun BottomNavBar(navController: NavHostController) {
     val items = listOf(Screen.Home, Screen.AI, Screen.Profile)
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primaryContainer
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 

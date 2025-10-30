@@ -2,7 +2,6 @@ package com.example.quickplan.ui.theme
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -17,24 +16,28 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
+    primary = PrimaryBlue,
+    secondary = AccentBlue,
+    tertiary = LightBlue,
     background = Color(0xFF1C1B1F),
     surface = Color(0xFF1C1B1F),
+    primaryContainer = PrimaryBlue,
+    onPrimaryContainer = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = PrimaryBlue,
+    secondary = AccentBlue,
+    tertiary = LightBlue,
+    background = BackgroundColor,
+    surface = BackgroundColor,
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
+    onSecondary = TextColor,
+    onTertiary = TextColor,
+    onBackground = TextColor,
+    onSurface = TextColor,
+    primaryContainer = LightBlue,
+    onPrimaryContainer = TextColor
 )
 
 @Composable
@@ -58,7 +61,7 @@ fun QuickPlanTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = Color.Transparent.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

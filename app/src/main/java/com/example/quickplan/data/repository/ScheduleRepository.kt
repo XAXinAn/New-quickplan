@@ -80,9 +80,7 @@ class ScheduleRepository private constructor(
             )
 
             val response = apiService.createSchedule(request)
-            val created = handleScheduleResponse(response)
-            updateLocalCache(created)
-            created
+            handleScheduleResponse(response)
         }
     }
 
@@ -227,7 +225,9 @@ class ScheduleRepository private constructor(
     }
 
     private fun ScheduleDto.toModel(): Schedule {
-        val localId = id.ifBlank { UUID.randomUUID().toString() }
+        if (id.isBlank()) {
+            throw IllegalStateException("服务器返回的日程ID为空，无法创建日程。")
+        }
         // 后端返回的时间可能是 HH:mm:ss 或 HH:mm 格式，需要兼容处理
         val parsedTime = try {
             LocalTime.parse(time, timeFormatterWithSeconds)
@@ -240,7 +240,7 @@ class ScheduleRepository private constructor(
         }
         
         return Schedule(
-            id = localId,
+            id = id, // 直接使用服务器返回的ID
             serverId = id,
             title = title,
             date = LocalDate.parse(date, dateFormatter),

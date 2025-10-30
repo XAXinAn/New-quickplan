@@ -4,12 +4,12 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * 应用内使用的日程模型。
- * - id: 本地唯一标识，用于界面列表操作。
- * - serverId: 后端返回的唯一标识，用于接口调用。
+ * 表示一个日程的UI模型
  */
 data class Schedule(
+    // 本地唯一ID，用于在UI中进行识别
     val id: String,
+    // 后端数据库中的ID，对于新建的日程可能为空
     val serverId: String?,
     val title: String,
     val date: LocalDate,

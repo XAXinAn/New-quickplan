@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         setContent {
             QuickPlanTheme(darkTheme = false, dynamicColor = false) {
                 val navController = rememberNavController()

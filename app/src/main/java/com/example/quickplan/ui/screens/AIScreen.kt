@@ -44,123 +44,131 @@ fun AIScreen() {
             context.applicationContext as android.app.Application
         )
     )
-    
+
     val messages by viewModel.messages.collectAsState()
     val conversations by viewModel.conversations.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val showSidebar by viewModel.showSidebar.collectAsState()
-    
+
     var inputText by remember { mutableStateOf("") }
-    
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // 主对话界面
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            // 顶部工具栏
-            TopAppBar(
-                title = { Text("AI 助手") },
-                navigationIcon = {
-                    IconButton(onClick = { viewModel.toggleSidebar() }) {
-                        Icon(Icons.Default.Menu, contentDescription = "菜单")
-                    }
-                },
-                actions = {
-                    // 网络诊断按钮
-                    var isDiagnosing by remember { mutableStateOf(false) }
-                    val scope = rememberCoroutineScope()
-                    
-                    IconButton(
-                        onClick = {
-                            isDiagnosing = true
-                            scope.launch {
-                                try {
-                                    Log.d("AIScreen", "🔍 开始网络诊断...")
-                                    val result = NetworkDebugHelper.diagnose()
-                                    viewModel.setError(result.getMessage())
-                                } catch (e: Exception) {
-                                    Log.e("AIScreen", "诊断失败", e)
-                                    viewModel.setError("诊断异常: ${e.message}")
-                                } finally {
-                                    isDiagnosing = false
-                                }
-                            }
-                        },
-                        enabled = !isDiagnosing
-                    ) {
-                        if (isDiagnosing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(Icons.Default.Settings, contentDescription = "网络诊断")
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                TopAppBar(
+                    title = { Text("AI 助手") },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.toggleSidebar() }) {
+                            Icon(Icons.Default.Menu, contentDescription = "菜单")
                         }
-                    }
-                    
-                    IconButton(onClick = { viewModel.startNewConversation() }) {
-                        Icon(Icons.Default.Add, contentDescription = "新建对话")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    },
+                    actions = {
+                        // 网络诊断按钮
+                        var isDiagnosing by remember { mutableStateOf(false) }
+                        val scope = rememberCoroutineScope()
+
+                        IconButton(
+                            onClick = {
+                                isDiagnosing = true
+                                scope.launch {
+                                    try {
+                                        Log.d("AIScreen", "🔍 开始网络诊断...")
+                                        val result = NetworkDebugHelper.diagnose()
+                                        viewModel.setError(result.getMessage())
+                                    } catch (e: Exception) {
+                                        Log.e("AIScreen", "诊断失败", e)
+                                        viewModel.setError("诊断异常: ${e.message}")
+                                    } finally {
+                                        isDiagnosing = false
+                                    }
+                                }
+                            },
+                            enabled = !isDiagnosing
+                        ) {
+                            if (isDiagnosing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(Icons.Default.Settings, contentDescription = "网络诊断")
+                            }
+                        }
+
+                        IconButton(onClick = { viewModel.startNewConversation() }) {
+                            Icon(Icons.Default.Add, contentDescription = "新建对话")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
-            )
-            
-            // 错误提示
-            errorMessage?.let { error ->
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.errorContainer
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                // 错误提示
+                errorMessage?.let { error ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.errorContainer
                     ) {
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(onClick = { viewModel.clearError() }) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "关闭",
-                                tint = MaterialTheme.colorScheme.onErrorContainer
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.weight(1f)
                             )
+                            IconButton(onClick = { viewModel.clearError() }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "关闭",
+                                    tint = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
                         }
                     }
                 }
+
+                // 消息列表
+                MessageList(
+                    messages = messages,
+                    isLoading = isLoading,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // 输入框
+                MessageInput(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    onSend = {
+                        if (inputText.isNotBlank()) {
+                            viewModel.sendMessage(inputText)
+                            inputText = ""
+                        }
+                    },
+                    onImageSelected = {
+                        viewModel.processOCRImage(it)
+                    },
+                    enabled = !isLoading
+                )
             }
-            
-            // 消息列表
-            MessageList(
-                messages = messages,
-                isLoading = isLoading,
-                modifier = Modifier.weight(1f)
-            )
-            
-            // 输入框
-            MessageInput(
-                value = inputText,
-                onValueChange = { inputText = it },
-                onSend = {
-                    if (inputText.isNotBlank()) {
-                        viewModel.sendMessage(inputText)
-                        inputText = ""
-                    }
-                },
-                onImageSelected = { bitmap ->
-                    viewModel.processOCRImage(bitmap)
-                },
-                enabled = !isLoading
-            )
         }
-        
+
         // 侧边栏（对话历史）
         if (showSidebar) {
             ConversationSidebar(
@@ -192,7 +200,7 @@ fun MessageList(
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    
+
     // 自动滚动到最新消息
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -201,14 +209,14 @@ fun MessageList(
             }
         }
     }
-    
+
     LazyColumn(
         state = listState,
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
+        verticalArrangement = if (messages.isEmpty()) Arrangement.Center else Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         if (messages.isEmpty()) {
             item {
@@ -222,13 +230,6 @@ fun MessageList(
                 MessageBubble(message = message)
             }
         }
-        
-        // 移除额外的 LoadingIndicator,使用消息列表中的 AI 消息来显示加载状态
-        // if (isLoading) {
-        //     item {
-        //         LoadingIndicator()
-        //     }
-        // }
     }
 }
 
@@ -238,10 +239,9 @@ fun MessageList(
 @Composable
 fun EmptyState() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Default.ChatBubbleOutline,
@@ -271,7 +271,7 @@ fun EmptyState() {
 fun MessageBubble(message: Message) {
     // 只有内容不为空时才显示整个消息
     if (message.content.isEmpty()) return
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
@@ -287,14 +287,14 @@ fun MessageBubble(message: Message) {
             ) {
                 Text(
                     text = "AI",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
-        
+
         Column(
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
@@ -320,7 +320,7 @@ fun MessageBubble(message: Message) {
                     lineHeight = 20.sp
                 )
             }
-            
+
             // 时间戳
             Text(
                 text = formatTimestamp(message.timestamp),
@@ -329,7 +329,7 @@ fun MessageBubble(message: Message) {
                 modifier = Modifier.padding(top = 4.dp, start = 8.dp, end = 8.dp)
             )
         }
-        
+
         if (message.isUser) {
             Spacer(modifier = Modifier.width(8.dp))
             // 用户头像
@@ -343,7 +343,7 @@ fun MessageBubble(message: Message) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -369,7 +369,7 @@ fun LoadingIndicator() {
         ) {
             Text(
                 text = "AI",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -421,7 +421,7 @@ fun MessageInput(
                 onImageSelected = onImageSelected,
                 modifier = Modifier.padding(end = 8.dp)
             )
-            
+
             OutlinedTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -448,7 +448,7 @@ fun MessageInput(
                 Icon(
                     imageVector = Icons.Default.Send,
                     contentDescription = "发送",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -492,7 +492,7 @@ fun ConversationSidebar(
                     Icon(Icons.Default.Close, contentDescription = "关闭")
                 }
             }
-            
+
             // 新建对话按钮
             Button(
                 onClick = onNewConversation,
@@ -507,9 +507,9 @@ fun ConversationSidebar(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("新建对话")
             }
-            
+
             Divider()
-            
+
             // 对话列表
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -537,7 +537,7 @@ fun ConversationItem(
     onDelete: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -577,7 +577,7 @@ fun ConversationItem(
             }
         }
     }
-    
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
